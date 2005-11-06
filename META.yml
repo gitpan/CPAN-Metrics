@@ -1,0 +1,15 @@
+name: CPAN-Metrics
+version: 0.01
+abstract: Create and maintain a Perl::Metrics database for all of CPAN
+author: Adam Kennedy <cpan@ali.as>
+license: perl
+distribution_type: module
+requires:
+  perl: 5.005
+  Carp: 0
+  Perl::Metrics: 0.03
+  CPAN::Mini::Extract: 0.10
+no_index:
+  directory:
+    - inc
+generated_by: Module::Install version 0.370
