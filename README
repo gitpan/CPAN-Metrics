@@ -3,23 +3,20 @@ NAME
     CPAN
 
 SYNOPSIS
-      # Prepare a CPAN::Metrics run
+      # Do a CPAN::Metrics run
       my $metrics = CPAN::Metrics->new(
-          remote  => 'ftp://cpan.pair.com/pub/CPAN/',
+          remote  => 'http://mirrors.kernel.org/cpan/',
           local   => '/home/adam/.minicpan',
-          extract => '/home/adam/explosion',
-          metrics => '/var/cache/perl/cpan_metrics.sqlite',
-          );
-  
-      # Launch the run
-      $metrics->run;
+          extract => '/home/adam/.cpanmetrics',
+          metrics => '/home/adam/.cpanmetrics/metrics.sqlite',
+      )->run;
 
 DESCRIPTION
     "CPAN::Metrics" is a combination of CPAN::Mini and Perl::Metrics.
 
-    In short, it lets you pull out all of CPAN (for various definitions of
-    "all") and run Perl::Metrics on it to generate massive amounts of
-    metrics data on the 16,000,000 lines of code in CPAN.
+    It lets you pull out all of CPAN (for various definitions of "all") and
+    run Perl::Metrics on it to generate massive amounts of metrics data on
+    the 16,000,000 lines of code in CPAN.
 
   Resource Usage
     While it might make it relatively easy to write the code to "process all
@@ -43,7 +40,7 @@ new
 
     It takes a variety of different parameters.
 
-    minicpan args
+    minicpan arguments
 
     Returns a new "CPAN::Metrics" object, or dies on error.
 
@@ -78,10 +75,10 @@ SUPPORT
     For other issues, contact the author.
 
 AUTHOR
-    Adam Kennedy <cpan@ali.as>, <http://ali.as/>
+    Adam Kennedy <adamk@cpan.org>, <http://ali.as/>
 
 COPYRIGHT
-    Copyright 2005 Adam Kennedy. All rights reserved.
+    Copyright 2005 - 2008 Adam Kennedy.
 
     This program is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.

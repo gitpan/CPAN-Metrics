@@ -8,24 +8,21 @@ CPAN::Metrics - Create and maintain a Perl::Metrics database for all of CPAN
 
 =head1 SYNOPSIS
 
-  # Prepare a CPAN::Metrics run
+  # Do a CPAN::Metrics run
   my $metrics = CPAN::Metrics->new(
-      remote  => 'ftp://cpan.pair.com/pub/CPAN/',
+      remote  => 'http://mirrors.kernel.org/cpan/',
       local   => '/home/adam/.minicpan',
-      extract => '/home/adam/explosion',
-      metrics => '/var/cache/perl/cpan_metrics.sqlite',
-      );
-  
-  # Launch the run
-  $metrics->run;
+      extract => '/home/adam/.cpanmetrics',
+      metrics => '/home/adam/.cpanmetrics/metrics.sqlite',
+  )->run;
 
 =head1 DESCRIPTION
 
 C<CPAN::Metrics> is a combination of L<CPAN::Mini> and L<Perl::Metrics>.
 
-In short, it lets you pull out all of CPAN (for various definitions of
-"all") and run L<Perl::Metrics> on it to generate massive amounts of
-metrics data on the 16,000,000 lines of code in CPAN.
+It lets you pull out all of CPAN (for various definitions of "all") and
+run L<Perl::Metrics> on it to generate massive amounts of metrics data
+on the 16,000,000 lines of code in CPAN.
 
 =head2 Resource Usage
 
@@ -45,14 +42,15 @@ What you do with the metrics after B<that> is up to you.
 
 =cut
 
+use 5.005;
 use strict;
 use base 'CPAN::Mini::Extract';
-use Carp          'croak';
+use Carp 'croak';
 use Perl::Metrics ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.01';
+	$VERSION = '0.08';
 }
 
 
@@ -75,7 +73,7 @@ It takes a variety of different parameters.
 
 =over
 
-=item minicpan args
+=item minicpan arguments
 
 =back
 
@@ -87,7 +85,36 @@ sub new {
 	my $class = ref $_[0] ? ref shift : shift;
 
 	# Call up to get the base object
-	my $self = $class->SUPER::new( @_ );
+	my $self = $class->SUPER::new(
+		force          => 1,
+		skip_perl      => 1,
+		extract_check  => 1,
+		path_filters   => [
+			qr/\bAcme\b/i,
+			qr/\bPDF\-API2\b/i,
+			qr/\bPerl6\b/i,
+			],
+		# Remove some known troublemakers
+		module_filters => [
+			qr/^Acme::/i,
+			qr/^Meta::/i,
+			qr/\bPerl6\b/i,
+			],
+	        extract_filter =>
+	        	sub {
+				return 0 if /\:/;
+	        		return 0 if /\binc\b/;
+	        		return 1 if /\.pl$/;
+				return 0 if /\bexamples?\b/;
+	        		if ( /\bt\b/ ) {
+		        		return 1 if /\.t$/;
+	        		} else {
+		        		return 1 if /\.pm$/;
+	        		}
+	        		return 0;
+	        	},
+		@_,
+		);
 
 	# Check and set the metrics database
 	unless ( $self->{metrics} ) {
@@ -116,14 +143,19 @@ Oh, and return true. Any errors will cause an exception (i.e. die)
 
 sub run {
 	my $self = shift;
-
-	# Do the superclass functionality
 	$self->SUPER::run( @_ );
+	$self->process_index;
+}
+
+sub process_index {
+	my $self = shift;
 
 	# Process the extraction directory
-	Perl::Metrics->process_directory( $self->{extract} );
+	local $Perl::Metrics::TRACE = 1;
+	$self->trace("Indexing and processing documents in $self->{extract}...\n");
+	Perl::Metrics->process_index( $self->{extract} );
 
-	1;
+	return 1;
 }
 
 1;
@@ -153,11 +185,11 @@ For other issues, contact the author.
 
 =head1 AUTHOR
 
-Adam Kennedy E<lt>cpan@ali.asE<gt>, L<http://ali.as/>
+Adam Kennedy E<lt>adamk@cpan.orgE<gt>, L<http://ali.as/>
 
 =head1 COPYRIGHT
 
-Copyright 2005 Adam Kennedy. All rights reserved.
+Copyright 2005 - 2008 Adam Kennedy.
 
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
